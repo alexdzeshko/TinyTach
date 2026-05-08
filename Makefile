@@ -13,7 +13,10 @@ upload: compile
 	avrdude -c $(PROGRAMMER) -p $(MCU) -B 32 -U flash:w:$(HEX):i
 
 fuses:
-	arduino-cli burn-bootloader --fqbn $(FQBN) -P $(PROGRAMMER)
+	avrdude -c $(PROGRAMMER) -p $(MCU) -B 32 \
+		-U lfuse:w:0xE2:m \
+		-U hfuse:w:0xDF:m \
+		-U efuse:w:0xFF:m
 
 clean:
 	arduino-cli compile --fqbn $(FQBN) --clean TinyTach
