@@ -128,12 +128,13 @@ void loop() {
     if (interval >= MIN_INTERVAL && interval <= MAX_INTERVAL) {
       uint32_t rawRpm = 60000000UL / interval / PULSES_PER_REV;
       // Reject spikes more than 2x current RPM — no real engine can double RPM
-      // in one pulse. Skip the startup phase (rpm < 500) where jumps are normal.
-      if (rpm > 500 && rawRpm > rpm * 2) {
+      // in one pulse. Only applies once rpm is in normal running range (>1000).
+      if (rpm > 1000 && rawRpm > rpm * 2) {
         // spike — ignore
       } else if (rawRpm > rpm) {
-        // Rising: smooth to suppress noise
-        rpm = (rpm * 5 + rawRpm) / 6;
+        // Rising: jump directly when near-zero to avoid smoothing locking below
+        // the spike threshold after a stall/restart. Smooth once in normal range.
+        rpm = (rpm > 200) ? (rpm * 5 + rawRpm) / 6 : rawRpm;
       } else {
         // Falling: respond immediately
         rpm = rawRpm;
